@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure File Transfer</title>
+    <link rel="icon" href="data:,">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .container {
+            max-w: 1800px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            background: #f9fafb;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .card-body {
+            padding: 16px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            padding: 16px 16px 8px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: #2563eb;
+            color: white;
+        }
+
+        .tab.inactive {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+
+        .tab.inactive:hover {
+            background: #d1d5db;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .upload-zone {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f9fafb;
+        }
+
+        .upload-zone:hover {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .upload-zone.dragover {
+            border-color: #1e40af;
+            background: #dbeafe;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: #2563eb;
+            ring: 2px;
+            ring-color: #3b82f6;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background: #16a34a;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #15803d;
+        }
+
+        .file-info {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        .result {
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        .result.success {
+            background: #d1fae5;
+            border-left: 4px solid #16a34a;
+            color: #065f46;
+        }
+
+        .result.error {
+            background: #fee2e2;
+            border-left: 4px solid #dc2626;
+            color: #991b1b;
+        }
+
+        .message-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .message-sender-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #2563eb;
+            ring: 2px;
+            ring-color: #3b82f6;
+        }
+
+        .message-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .message-item {
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            height: fit-content;
+        }
+
+        .message-item:hover {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .message-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .message-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .message-sender-info {
+            flex: 1;
+        }
+
+        .message-sender {
+            font-weight: 600;
+            color: #1e40af;
+            font-size: 13px;
+            display: block;
+        }
+
+        .message-time {
+            font-size: 10px;
+            color: #6b7280;
+        }
+
+        .message-content {
+            color: #374151;
+            font-size: 13px;
+            line-height: 1.5;
+            word-break: break-word;
+            margin-bottom: 10px;
+            padding-left: 0px;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 6px;
+            padding-left: 0px;
+        }
+
+        .btn-copy {
+            padding: 4px 10px;
+            font-size: 11px;
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-copy:hover {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px;
+            color: #6b7280;
+        }
+
+        .warning {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            color: #92400e;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="header-content">
+        <div class="header-title">
+            🔒 Secure File Transfer
+        </div>
+        <div class="status-badge">
+            <span style="width: 8px; height: 8px; background: #16a34a; border-radius: 50%; display: inline-block;"></span>
+            System Active
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="warning">
+        ⚠️ Files auto-delete after download or 1 hour. Max 15MB per file. Messages expire after 1 hour.
+    </div>
+
+    <div class="card">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('files')">📤 File Transfer</button>
+            <button class="tab inactive" onclick="switchTab('messages')">💬 Messages</button>
+        </div>
+
+        <div id="filesTab" class="card-body">
+            <div class="grid-2">
+                <div>
+                    <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151;">Upload File</h3>
+                    <div class="upload-zone" id="uploadZone">
+                        <p style="font-size: 14px; margin-bottom: 8px;">📁 Drag & drop or click to browse</p>
+                        <p style="font-size: 12px; color: #6b7280;">PDF, Excel, ZIP (max 15MB)</p>
+                        <input type="file" id="fileInput">
+                    </div>
+                    <div id="fileInfo"></div>
+                    <button class="btn btn-primary" id="uploadBtn" disabled style="width: 100%; margin-top: 12px;">Upload File</button>
+                    <div id="uploadResult"></div>
+                </div>
+
+                <div>
+                    <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151;">Download File</h3>
+                    <input type="text" id="fileIdInput" placeholder="Enter File ID">
+                    <button class="btn btn-success" id="downloadBtn" style="width: 100%; margin-top: 12px;">Download File</button>
+                    <div id="downloadResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="messagesTab" class="card-body" style="display: none;">
+            <div class="message-input-group">
+                <div class="message-sender-row">
+                    <input type="text" id="senderIdInput" placeholder="Your Name/ID" style="width: 200px;">
+                    <button class="btn btn-primary" id="sendMessageBtn" style="padding: 10px 24px;">Send Message</button>
+                </div>
+                <textarea id="messageInput" placeholder="Type your message here..."></textarea>
+            </div>
+            <div id="messageResult"></div>
+            <div id="messageList" class="message-list"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">Server Status</div>
+        </div>
+        <div class="card-body">
+            <button class="btn btn-primary" id="statusBtn">Check Status</button>
+            <div id="statusResult"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SERVER_URL = 'https://kaylie-unsanguineous-unplenteously.ngrok-free.dev';
+    const API_BASE = '/api/checking';
+
+    let selectedFile = null;
+    let currentTab = 'files';
+
+    function switchTab(tab) {
+        currentTab = tab;
+        const filesTab = document.getElementById('filesTab');
+        const messagesTab = document.getElementById('messagesTab');
+        const tabs = document.querySelectorAll('.tab');
+
+        tabs.forEach(t => {
+            if (t.textContent.includes(tab === 'files' ? 'File Transfer' : 'Messages')) {
+                t.className = 'tab active';
+            } else {
+                t.className = 'tab inactive';
+            }
+        });
+
+        if (tab === 'files') {
+            filesTab.style.display = 'block';
+            messagesTab.style.display = 'none';
+        } else {
+            filesTab.style.display = 'none';
+            messagesTab.style.display = 'block';
+            loadMessages();
+        }
+    }
+
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const fileInfo = document.getElementById('fileInfo');
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelect(files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+
+    function handleFileSelect(file) {
+        selectedFile = file;
+        uploadBtn.disabled = false;
+
+        const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+        fileInfo.innerHTML = `
+            <div class="file-info">
+                <span style="font-weight: 600;">${file.name}</span>
+                <span style="color: #6b7280;">${sizeMB} MB</span>
+            </div>
+        `;
+    }
+
+    uploadBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = 'Uploading...';
+
+        try {
+            const response = await fetch(`${SERVER_URL}${API_BASE}/error`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                document.getElementById('uploadResult').innerHTML = `
+                    <div class="result success">
+                        <strong>✅ Upload successful!</strong><br>
+                        File ID: <strong>${result.fileId}</strong><br>
+                        ${result.expiresInMinutes ? `Expires in: ${result.expiresInMinutes} minutes<br>` : ''}
+                        <small>Save this ID to download the file</small>
+                    </div>
+                `;
+                selectedFile = null;
+                fileInfo.innerHTML = '';
+                fileInput.value = '';
+            } else {
+                throw new Error(result.message || 'Upload failed');
+            }
+        } catch (error) {
+            document.getElementById('uploadResult').innerHTML = `
+                <div class="result error">
+                    <strong>❌ Upload failed</strong><br>
+                    ${error.message}
+                </div>
+            `;
+        } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = 'Upload File';
+        }
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', async () => {
+        const fileId = document.getElementById('fileIdInput').value.trim();
+
+        if (!fileId) {
+            document.getElementById('downloadResult').innerHTML = `
+                <div class="result error">Please enter a File ID</div>
+            `;
+            return;
+        }
+
+        try {
+            const response = await fetch(`${SERVER_URL}${API_BASE}/errors/${fileId}`);
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const filename = response.headers.get('content-disposition')
+                    ?.split('filename=')[1]?.replace(/"/g, '') || 'download';
+
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                document.getElementById('downloadResult').innerHTML = `
+                    <div class="result success">
+                        <strong>✅ Download started!</strong><br>
+                        File: ${filename}<br>
+                        <small>⚠️ File deleted from server</small>
+                    </div>
+                `;
+                document.getElementById('fileIdInput').value = '';
+            } else {
+                throw new Error('File not found or expired');
+            }
+        } catch (error) {
+            document.getElementById('downloadResult').innerHTML = `
+                <div class="result error">
+                    <strong>❌ Download failed</strong><br>
+                    ${error.message}
+                </div>
+            `;
+        }
+    });
+
+    document.getElementById('statusBtn').addEventListener('click', async () => {
+        try {
+            const response = await fetch(`${SERVER_URL}${API_BASE}/status`);
+            const status = await response.text();
+
+            document.getElementById('statusResult').innerHTML = `
+                <div class="result success">
+                    <strong>🟢 Server Online</strong><br>
+                    ${status}
+                </div>
+            `;
+        } catch (error) {
+            document.getElementById('statusResult').innerHTML = `
+                <div class="result error">
+                    <strong>🔴 Server Offline</strong><br>
+                    Cannot connect to server
+                </div>
+            `;
+        }
+    });
+
+    let currentSenderId = '';
+
+    document.getElementById('sendMessageBtn').addEventListener('click', async () => {
+        const content = document.getElementById('messageInput').value.trim();
+        const senderId = document.getElementById('senderIdInput').value.trim();
+
+        if (!senderId) {
+            document.getElementById('messageResult').innerHTML = `
+                <div class="result error">Please enter your name/ID</div>
+            `;
+            return;
+        }
+
+        if (!content) {
+            document.getElementById('messageResult').innerHTML = `
+                <div class="result error">Please enter a message</div>
+            `;
+            return;
+        }
+
+        currentSenderId = senderId;
+
+        try {
+            const response = await fetch(`${SERVER_URL}/api/messages/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content, senderId })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                document.getElementById('messageInput').value = '';
+                document.getElementById('messageResult').innerHTML = `
+                    <div class="result success">Message sent!</div>
+                `;
+                setTimeout(() => {
+                    document.getElementById('messageResult').innerHTML = '';
+                }, 2000);
+                loadMessages();
+            } else {
+                throw new Error(result.error || 'Failed to send message');
+            }
+        } catch (error) {
+            document.getElementById('messageResult').innerHTML = `
+                <div class="result error">${error.message}</div>
+            `;
+        }
+    });
+
+    async function loadMessages() {
+        try {
+            const response = await fetch(`${SERVER_URL}/api/messages/all`);
+            const messages = await response.json();
+
+            const messageList = document.getElementById('messageList');
+            if (messages.length === 0) {
+                messageList.innerHTML = '<div class="empty-state">📭 No messages yet. Start the conversation!</div>';
+                return;
+            }
+
+            messageList.innerHTML = messages.map(msg => {
+                const date = new Date(msg.timestamp);
+                const timeStr = date.toLocaleTimeString();
+                const initial = msg.senderId.charAt(0).toUpperCase();
+                const escapedContent = msg.content.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+                return `
+                    <div class="message-item">
+                        <div class="message-header">
+                            <div class="message-avatar">${initial}</div>
+                            <div class="message-sender-info">
+                                <span class="message-sender">${msg.senderId}</span>
+                                <span class="message-time">${timeStr}</span>
+                            </div>
+                        </div>
+                        <div class="message-content">${msg.content}</div>
+                        <div class="message-actions">
+                            <button class="btn-copy" onclick="copyMessage('${escapedContent}')">📋 Copy</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('Failed to load messages:', error);
+        }
+    }
+
+    function copyMessage(content) {
+        navigator.clipboard.writeText(content).then(() => {
+            alert('Message copied!');
+        }).catch(err => {
+            console.error('Copy failed:', err);
+        });
+    }
+
+    setInterval(() => {
+        if (currentTab === 'messages') {
+            loadMessages();
+        }
+    }, 3000);
+</script>
+</body>
+</html>
